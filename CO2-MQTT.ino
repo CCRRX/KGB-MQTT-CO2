@@ -25,7 +25,7 @@ IPAddress ip(192, 168, 178, 178);
 IPAddress server(192, 168, 178, 128);
 
 SoftwareSerial SerialCom (3,2);
-int myDelay = 10000;
+int myDelay = 1000;
  
 byte addArray[] = {0xFF, 0x01, 0x86,0x00, 0x00, 0x00,0x00, 0x00, 0x79};
  
@@ -33,6 +33,10 @@ char dataValue[9];
 String dataString = "";
 String ppm = " ";
 char ppmc[50];
+int resHigh;
+int resLow;
+int pulse;
+  
 
 // Callback function header
 void callback(char* topic, byte* payload, unsigned int length);
@@ -53,7 +57,15 @@ void callback(char* topic, byte* payload, unsigned int length) {
     //digitalWrite(lightPin, LOW);
     client.publish("testTopic", "Light Off");
     }
+  if (payload[0] == '2'){
+  client.publish("testTopic", ppmc);
+    }
 } // void callback
+
+
+//---
+
+//---
 
 
 void setup()
@@ -63,13 +75,13 @@ void setup()
   
   Ethernet.begin(mac, ip);
   if (client.connect("arduinoClient")) {
-    client.publish("testTopic","hello world");
+    client.publish("testTopic","CO2 Sensor - Online");
     client.subscribe("inTopic");
   }
-Serial.begin(9600);
+//Serial.begin(9600);
 SerialCom.begin(9600);
-Serial.println("16CORE | MH-Z16 C02 Sensor Test Code");
-Serial.println("------------------------------------");
+//Serial.println("16CORE | MH-Z16 C02 Sensor Test Code");
+//Serial.println("------------------------------------");
 }
 
 void loop()
@@ -78,16 +90,16 @@ void loop()
   
   SerialCom.write(addArray, 9);
   SerialCom.readBytes(dataValue, 9);
-  int resHigh = (int) dataValue[2];
-  int resLow  = (int) dataValue[3];
-  int pulse = (256*resHigh)+resLow;
+  resHigh = (int) dataValue[2];
+  resLow  = (int) dataValue[3];
+  pulse = (256*resHigh)+resLow;
   dataString = String(pulse);
-  Serial.print("PPM : ");
-  Serial.println(pulse);
+  //Serial.print("PPM : ");
+  //Serial.println(pulse);
 
   ppm = String(pulse); //converting Humidity (the float variable above) to a string
   ppm.toCharArray(ppmc, ppm.length() + 1); //packaging up the data to publish to mqtt whoa...
 
-  client.publish("testTopic", ppmc);
-  delay(myDelay);
+  //client.publish("testTopic", ppmc);
+  //delay(myDelay);
 }
